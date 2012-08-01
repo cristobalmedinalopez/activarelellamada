@@ -4,7 +4,7 @@
  * Licencia:
  * Este Software está distribuido bajo la licencia general pública de GNU, GPL. Puedes encontrar esta licencia completa en http://www.gnu.org.
  * Es gratuito, puedes copiar y utlizar el código líbremente sin cargo alguno. Tienes derecho a modificar
- * el codigo fuente y a distribuirlo por tu cuenta, siempre informando de la procedencia original.
+ * el código fuente y a distribuirlo por tu cuenta, siempre informando de la procedencia original.
  *
 */
 
