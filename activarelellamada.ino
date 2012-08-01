@@ -30,7 +30,7 @@ void initGSM(){
   delay(100);  
 }
 
-//Funcion para comprobar si ese numero tiene permiso
+//Función para comprobar si ese numero tiene permiso
 //devuelve true si tiene permiso, false si no lo tiene.
 boolean isAllow(String num){
   for (int i=0;i<sizeof(numList);i++){
@@ -40,7 +40,7 @@ boolean isAllow(String num){
   return false;
 }
 
-//Funcion que activa el rele durante 1.5 segundos
+//Función que activa el rele durante 1.5 segundos
 void fire(){
    digitalWrite(9,HIGH);
    delay(1500);
