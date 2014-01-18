@@ -122,7 +122,7 @@ void loop() {
   }
    
   //En caso de perder la cobertura, volver a conectarse a la red
-  if (inGSM.indexOf("CREG:")>-1 && inGSM.indexOf("CREG: 0,1")==-1){
+  if (inGSM.indexOf("CREG:")>-1 && inGSM.indexOf("CREG: 0,1")==-1 && inGSM.indexOf("CREG: 0,5")==-1){
     Serial.println("Se ha perdido la cobertura, reiniciando...");
     mySerial.print("AT+CFUN=1,1\r\n");
     delay(4000);
