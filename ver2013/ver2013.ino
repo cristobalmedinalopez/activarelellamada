@@ -6,35 +6,47 @@
  * Es gratuito, puedes copiar y utlizar el código líbremente sin cargo alguno. Tienes derecho a modificar
  * el código fuente y a distribuirlo por tu cuenta, siempre informando de la procedencia original.
  *
- * Activar relé mediante llamada de teléfono. Versión 2013.
+ * Activar relé mediante llamada de teléfono. Versión 2013. Actualizado en 2015.
 */
 
 //Hacemos uso de SoftwareSerial para usar dos pines cualquiera de arduino
 #include <SoftwareSerial.h>
+#include <TimerOne.h>
 
 SoftwareSerial mySerial(5,6); //rx,tx
 String inGSM; //Almacenar la informaci'on leida del modulo gsm
 String numList[]={"600000000","612345678"}; //N'umeros autorizados
-boolean intrusos=false;
-double ttl=0; //Tiempo de vida
 
 void setup()
 {
   pinMode(9, OUTPUT); // rel'e
   pinMode(2, INPUT); // pulsador
-  pinMode(11, OUTPUT); // altavoz
   pinMode(10, OUTPUT); // igt modulo gsm tc35
   mySerial.begin(9600);
   Serial.begin(9600);
+  Timer1.initialize(20000000); //20sg (max. 21.47)
+  Timer1.attachInterrupt(ISR_alive); // Activa la interrupcion y la asocia a ISR_alive
   initGSM(); //iniciar el modulo gsm
+}
+ 
+void ISR_alive(){
+     on();
+     Serial.println("Comprobando red...");
+     mySerial.print("AT+CREG?\r\n");
+}
+
+void on(){
+   digitalWrite(10,HIGH); //igt 
+   delay(100);
+   digitalWrite(10,LOW); //igt  
 }
  
 void initGSM(){
   digitalWrite(9,HIGH); //desactivamos el rel'e (activo a nivel bajo)
-  digitalWrite(10,LOW); //activamos el modulo gsm (activo a nivel bajo)
+  on();
   Serial.println("Iniciando...");
   mySerial.print("AT+CPIN=1234\r\n"); //Enviar PIN (1234)
-  delay(10000);
+  delay(5000);
   mySerial.print("AT+CLIP=1\r\n"); //Activar alarma llamada
   delay(500);  
   mySerial.print("AT+CMGF=1\r\n"); //Activar modo texto
@@ -60,31 +72,19 @@ void fire(){
 
 // Funci'on: Enviar sms
 void sendSMS(){
-   mySerial.print("AT+CMGS=666554433\r\n"); //Comando AT enviar SMS
+   mySerial.print("AT+CMGF=1\r\n"); //Activar modo texto
+   delay(500); 
+   mySerial.print("AT+CMGS=\"666554433\"\r\n"); //AT command to send SMS
    delay(1000);
-   mySerial.print("Estoy operativo ;)"); //Mensaje
+   mySerial.print(num); //Print the message
    delay(1000);
-   mySerial.print("\x1A"); //Enviar ascii SUB  
+   mySerial.print("\x1A"); //Sendt ascii SUB  
+   delay(5000);
 }
 
 void loop() {
   inGSM="";
-  ttl++;
-  
-  //Si se detectan intrusos llamar al administrador (666554433)
-  //Se ha liberado el pulsador
-  if (digitalRead(2) == HIGH && intrusos==false){
-      intrusos=true;
-      mySerial.print("ATD666554433;\r\n");
-      delay(500);
-  }
 
-  //Si intrusos, emitir sonido (alarma).
-  if (intrusos){
-     tone(11,800,100);
-     delay(200);
-  }
-  
   //Leer enventos en modulo gsm
   while (mySerial.available()>0){
      delay(10);
@@ -95,7 +95,7 @@ void loop() {
 
   //Si llamada
   if (inGSM.indexOf("RING")>-1){
-      delay(1000);
+      delay(180);
       mySerial.print("AT+CHUP\r\n"); //Rechazar llamada
      
       String num;
@@ -103,21 +103,13 @@ void loop() {
       int fin=inicio+9;
       
       num=inGSM.substring(inicio,fin); //Extraer n'umero    
-      
-      //Si es el administrador, detener alarma.
-      if (num=="666554433"){
-         intrusos=false; 
-      }
-      
+  
       //Si autorizado, accionar rel'e    
       if (isAllow(num)){
         fire();
-      }else{ // *** Opcional ***
-         // Si n'umero de control (950000000)
-         if (num=="950000000"){
-	   // Enviar SMS al administrador para consumir saldo.
-           sendSMS();
-         }
+      }else{
+        delay(800);
+        sendSMS(num);
       }
   }
    
@@ -128,11 +120,5 @@ void loop() {
     delay(4000);
     initGSM();
   }
-    
-  //Comprobar estado de la red
-  if (ttl==150000){
-     mySerial.print("AT+CREG?\r\n");
-     ttl=0;
-  }   
 }
 
