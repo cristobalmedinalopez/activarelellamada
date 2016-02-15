@@ -71,7 +71,7 @@ void fire(){
 }
 
 // Funci'on: Enviar sms
-void sendSMS(){
+void sendSMS(String num){
    mySerial.print("AT+CMGF=1\r\n"); //Activar modo texto
    delay(500); 
    mySerial.print("AT+CMGS=\"666554433\"\r\n"); //AT command to send SMS
